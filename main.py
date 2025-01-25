@@ -5,9 +5,16 @@ import pywinauto as pw
 
 
 def main():
+    # Во избежание некорректной работы pywinauto
+    try:
+        pw.Application(backend="uia").connect(path="C:\\АО ГНИВЦ\\Декларация 2024\\Decl2024.exe")
+        raise RuntimeError("Закройте приложение Декларация 2024 перед тем как запускать программу")
+    except pw.application.ProcessNotFoundError:
+        pass
+
     xml_folder_name = "xml"
-    user = "кто"
-    working_folder = "D:\ржака"
+    working_folder = "D:\ржака2"     # добавить возможность ввода потом обязательно
+    user = os.getlogin()
 
     # Создаём папку для всех извлечённых xml файлов
     os.mkdir(f"C:\\Users\\{user}\\Desktop\\{xml_folder_name}")
@@ -18,19 +25,28 @@ def main():
                 open_file(os.path.join(root, file))
                 create_xml(xml_folder_name)
 
-    data = collect_info(xml_folder_name, user)
-    print(f"collected data: {data}")
-
-
-def collect_info(path: str, user: str):
-    data = []
-    for root, dirs, files in os.walk(f"C:\\Users\\{user}\\Desktop\\{path}"):
+    # Пробегаемся по xml-файлам, находим нужные и записываем данные клиентов в текстовый файл
+    for root, dirs, files in os.walk(f"C:\\Users\\{user}\\Desktop\\{xml_folder_name}"):
         for file in files:
-            if file.endswith(".xml") and find_deduction(os.path.join(root, file)):
-                data.append(get_info(os.path.join(root, file)))
-                print(f"<log> {root}\\{file} -- 1")
-            # else:
-                # print(f"<log> {file} -- 0")
+            data = collect_info(os.path.join(root, file))
+            if data:
+                with open(f"C:\\Users\\{user}\\Desktop\\{xml_folder_name}\\result.txt", "a") as f:
+                    f.write(" ".join(data) + "\n")
+
+
+def collect_info(file: str) -> list:
+    data = []
+    if file.endswith(".xml") and find_deduction(file):
+        with open(file) as f:
+            soup = BeautifulSoup(f, features='xml')
+            fio = soup.find("ФИОФЛ")
+            fio = list(fio.attrs.values())
+            phone = soup.find("НПФЛ3")
+            phone = [phone.attrs["Тлф"]]
+            data = fio + phone
+        print(f"<log> {file} -- 1")
+    else:
+        print(f"<log> {file} -- 0")
     return data
 
 
@@ -64,12 +80,16 @@ def create_xml(folder_path: str):
 
 def find_deduction(path: str) -> bool:
     with open(path) as f:
-        p = f.read()
-        pos = p.find("ОстИВБезПроц")
+        f = f.read()
+        pos = f.find("ОстИВБезПроц")
         if pos > 0:
-            p = p[pos:pos + 30].split()[0]
-            p = int(p[14:-4])
-            if p:
+            ost = f[pos:pos + 70].split()
+            try:
+                ost = int(ost[0][14:-4]) + int(ost[1].split(">")[0][14:-4])
+            except ValueError:
+                print("<log> Ошибка чтения xml-файла")
+                return False
+            if ost:
                 return True
         return False
 
