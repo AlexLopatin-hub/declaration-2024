@@ -3,7 +3,7 @@ import main_process
 import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog as fd
-from tkinter.messagebox import askyesno, showerror
+from tkinter.messagebox import askyesno, showerror, showinfo
 import tempfile, base64, zlib
 
 
@@ -28,28 +28,37 @@ def select_folder():
 
 
 def start_process():
-    working_folder = entry.get()
-    ans = askyesno(title="Вы уверены?", message="Вы уверены что хотите начать? Процесс будет невозможно прервать")
-    if ans: askyesno(title="Вы уверены?", message="Вы уверены что хотите начать? Процесс будет невозможно прервать")
-    if ans:
-        try:
-            main_process.main(entry.get())
-            if askyesno(title="Готово", message="Результат сохранён на рабочем столе. Открыть в проводнике?"):
-                os.system(f"explorer C:\\Users\\{os.getlogin()}\\Desktop\\xml")
-        except FileExistsError:
-            showerror(title="Ошибка", message='Папка "xml" уже существует на рабочем столе, удалите или переместите её перед тем, как начать')
-        except RuntimeError:
-            showerror(title="Ошибка", message="Закройте приложение Декларация 2024 перед тем как запускать программу")
+    folder = entry.get().replace("/", "\\")
+    if folder == "":
+        showerror(title="Ошибка", message="Не указана директория")
+    else:
+        ans = askyesno(title="Вы уверены?", message="Вы уверены что хотите начать? Процесс будет невозможно прервать")
+        if ans: ans = askyesno(title="Вы уверены?", message="Вы уверены что хотите начать? Процесс будет невозможно прервать")
+        if ans:
+            try:
+                res = main_process.main(folder, enabled.get())
+                if askyesno(title="Готово", message="Результат сохранён на рабочем столе. Открыть в проводнике?"):
+                    os.system(f'explorer {res}')
+            except FileExistsError:
+                showerror(title="Ошибка", message='Папка "xml" уже существует на рабочем столе, удалите или переместите её перед тем, как начать')
+            except RuntimeError:
+                showerror(title="Ошибка", message="Закройте приложение Декларация 2024 перед тем как запускать программу")
 
 
-path = ''
 entry = ttk.Entry(width=45)
 entry.grid(row=0, column=0, columnspan=2)
 
 open_button = ttk.Button(root, text="Открыть папку", command=select_folder)
 open_button.grid(row=0, column=2, padx=(0, 10))
 
+enabled = tk.IntVar()
+alternate_checkbutton = ttk.Checkbutton(text="Обработать только xml", variable=enabled, width=38)
+alternate_checkbutton.grid(row=1, column=0, padx=0)
+
 start_button = ttk.Button(root, text="Начать", command=start_process)
 start_button.grid(row=1, column=2, padx=(0, 10))
+
+showinfo(title="Информация", message="При стандартном режиме работы требуется указать путь к папке с dc4 файлами. "
+                                     "При работе только с xml требуется указать путь к папке с xml-файлами")
 
 root.mainloop()

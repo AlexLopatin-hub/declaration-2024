@@ -3,35 +3,50 @@ import time
 from bs4 import BeautifulSoup
 
 
-def main(working_folder):
-    import pywinauto as pw
-    # Во избежание некорректной работы pywinauto
-    try:
-        pw.Application(backend="uia").connect(path="C:\\АО ГНИВЦ\\Декларация 2024\\Decl2024.exe")
-        raise RuntimeError("Закройте приложение Декларация 2024 перед тем как запускать программу")
-    except pw.application.ProcessNotFoundError:
-        pass
-
-    xml_folder_name = "xml"
+def main(working_folder: str, alternate = 0) -> str:
     user = os.getlogin()
 
-    # Создаём папку для всех извлечённых xml файлов
-    os.mkdir(f"C:\\Users\\{user}\\Desktop\\{xml_folder_name}")
+    if alternate == 1:
+        # if os.path.isdir(working_folder):
+        #     raise FileNotFoundError("Не найдена указанная папка")
+        for root, dirs, files in os.walk(working_folder):
+            for file in files:
+                data = collect_info(os.path.join(root, file))
+                if data:
+                    with open(f"{working_folder}\\result.txt", "a") as f:
+                        f.write(" ".join(data) + "\n")
+        return working_folder
 
-    # Поочерёдно запускаем каждый dc4 файл и извлекаем оттуда xml
-    for root, dirs, files in os.walk(working_folder):
-        for file in files:
-            if file.endswith(".dc4"):
-                open_file(os.path.join(root, file))
-                create_xml(xml_folder_name)
+    else:
+        import pywinauto as pw
+        xml_folder_name = "xml"
+        # Во избежание некорректной работы pywinauto
+        try:
+            pw.Application(backend="uia").connect(path="C:\\АО ГНИВЦ\\Декларация 2024\\Decl2024.exe")
+            raise RuntimeError("Закройте приложение Декларация 2024 перед тем как запускать программу")
+        except pw.application.ProcessNotFoundError:
+            pass
 
-    # Пробегаемся по xml-файлам, находим нужные и записываем данные клиентов в текстовый файл
-    for root, dirs, files in os.walk(f"C:\\Users\\{user}\\Desktop\\{xml_folder_name}"):
-        for file in files:
-            data = collect_info(os.path.join(root, file))
-            if data:
-                with open(f"C:\\Users\\{user}\\Desktop\\{xml_folder_name}\\result.txt", "a") as f:
-                    f.write(" ".join(data) + "\n")
+        # Создаём папку для всех извлечённых xml файлов
+        os.mkdir(f"C:\\Users\\{user}\\Desktop\\{xml_folder_name}")
+
+        # Поочерёдно запускаем каждый dc4 файл и извлекаем оттуда xml
+        for root, dirs, files in os.walk(working_folder):
+            for file in files:
+                if file.endswith(".dc4"):
+                    open_file(os.path.join(root, file))
+                    create_xml(xml_folder_name)
+
+        # Пробегаемся по xml-файлам, находим нужные и записываем данные клиентов в текстовый файл
+        for root, dirs, files in os.walk(f"C:\\Users\\{user}\\Desktop\\{xml_folder_name}"):
+            for file in files:
+                data = collect_info(os.path.join(root, file))
+                if data:
+                    with open(f"C:\\Users\\{user}\\Desktop\\{xml_folder_name}\\result.txt", "a") as f:
+                        f.write(" ".join(data) + "\n")
+
+        # Возвращаем путь созданной папки
+        return f"C:\\Users\\{user}\\Desktop\\xml"
 
 
 def collect_info(file: str) -> list:
@@ -50,7 +65,7 @@ def collect_info(file: str) -> list:
     return data
 
 
-def open_file(file: str):
+def open_file(file: str) -> None:
     import pywinauto as pw
     file = file.replace("%", "{%}").replace("^", "{^}").replace("+", "{+}")
     pw.Application().start('explorer.exe "C:\\Program Files"')
@@ -59,13 +74,14 @@ def open_file(file: str):
     dlg['Address: C:\\Program Files'].wait("ready")
     time.sleep(0.1)
     dlg.type_keys("%D")
+    time.sleep(0.1)
     dlg.type_keys(file, with_spaces=True)
     dlg.type_keys("{ENTER}")
     time.sleep(1)
     app.kill()
 
 
-def create_xml(folder_path: str):
+def create_xml(folder_path: str) -> None:
     import pywinauto as pw
     app = pw.Application(backend="uia").connect(path="C:\\АО ГНИВЦ\\Декларация 2024\\Decl2024.exe")
     dlg_spec = app.window(title_re=".* - Декларация 2024$")
@@ -109,6 +125,6 @@ def get_info(path: str) -> list:
 
 if __name__ == '__main__':
     t1 = time.time()
-    main()
+    main(".")
     t2 = time.time()
     print(f"time consumed: {t2 - t1}")
