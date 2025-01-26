@@ -67,19 +67,7 @@ def collect_info(file: str) -> list:
 
 def open_file(file: str) -> None:
     import pywinauto as pw
-    file = file.replace("%", "{%}").replace("^", "{^}").replace("+", "{+}")
-    pw.Application().start('explorer.exe "C:\\Program Files"')
-    app = pw.Application(backend="uia").connect(path="explorer.exe", title="Program Files")
-    dlg = app["Program Files"]
-    dlg['Address: C:\\Program Files'].wait("ready")
-    time.sleep(0.1)
-    dlg.type_keys("%D")
-    time.sleep(0.1)
-    dlg.type_keys(file, with_spaces=True)
-    dlg.type_keys("{ENTER}")
-    time.sleep(1)
-    app.kill()
-
+    pw.Application().start(f'explorer.exe "{file}"')
 
 def create_xml(folder_path: str) -> None:
     import pywinauto as pw
