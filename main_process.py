@@ -74,7 +74,8 @@ def create_xml(folder_path: str) -> None:
     app = pw.Application(backend="uia").connect(path="C:\\АО ГНИВЦ\\Декларация 2024\\Decl2024.exe")
     dlg_spec = app.window(title_re=".* - Декларация 2024$")
     actionable_dlg = dlg_spec.wait('visible')
-    dlg_spec.CoolBarButtons.click_input()
+    dlg_spec.CoolBarMenu.window(title="Декларация").click_input()
+    pw.keyboard.send_keys("{DOWN 2}{ENTER}")
     expl = pw.Desktop(backend="uia")["Обзор папок"]
     dlg_expl = expl
     dlg_expl_save_folder = dlg_expl.window(class_name="SysTreeView32").window(title="Рабочий стол")
