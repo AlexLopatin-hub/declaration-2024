@@ -19,7 +19,6 @@ def main(working_folder: str, alternate = 0) -> str:
 
     else:
         import pywinauto as pw
-        xml_folder_name = "xml"
         # Во избежание некорректной работы pywinauto
         try:
             pw.Application(backend="uia").connect(path="C:\\АО ГНИВЦ\\Декларация 2024\\Decl2024.exe")
@@ -28,7 +27,15 @@ def main(working_folder: str, alternate = 0) -> str:
             pass
 
         # Создаём папку для всех извлечённых xml файлов
-        os.mkdir(f"C:\\Users\\{user}\\Desktop\\{xml_folder_name}")
+        for i in range(1, 100):
+            xml_folder_name = "xml" + str(i)
+            xml_folder_path = f"C:\\{xml_folder_name}"
+            if not os.path.isdir(xml_folder_path):
+                break
+        else:
+            raise FileExistsError
+        # os.mkdir(f"C:\\Users\\{user}\\Desktop\\{xml_folder_name}")
+        os.mkdir(xml_folder_path)
 
         # Поочерёдно запускаем каждый dc4 файл и извлекаем оттуда xml
         for root, dirs, files in os.walk(working_folder):
@@ -38,16 +45,41 @@ def main(working_folder: str, alternate = 0) -> str:
                     create_xml(xml_folder_name)
 
         # Пробегаемся по xml-файлам, находим нужные и записываем данные клиентов в текстовый файл
-        for root, dirs, files in os.walk(f"C:\\Users\\{user}\\Desktop\\{xml_folder_name}"):
+        for root, dirs, files in os.walk(xml_folder_path):
             for file in files:
                 data = collect_info(os.path.join(root, file))
                 if data:
-                    with open(f"C:\\Users\\{user}\\Desktop\\{xml_folder_name}\\result.txt", "a") as f:
+                    with open(f"{xml_folder_path}\\result.txt", "a") as f:
                         f.write(" ".join(data) + "\n")
 
         # Возвращаем путь созданной папки
-        return f"C:\\Users\\{user}\\Desktop\\xml"
+        # return f"C:\\Users\\{user}\\Desktop\\xml"
+        return xml_folder_path
 
+
+def open_file(file: str) -> None:
+    import pywinauto as pw
+    pw.Application().start(f'explorer.exe "{file}"')
+
+def create_xml(folder_name: str) -> None:
+    import pywinauto as pw
+    app = pw.Application(backend="uia").connect(path="C:\\АО ГНИВЦ\\Декларация 2024\\Decl2024.exe")
+    dlg_spec = app.window(title_re=".* - Декларация 2024$")
+    time.sleep(2)
+    actionable_dlg = dlg_spec.wait('visible')
+    dlg_spec.children()[2].click_input()
+    # dlg_spec.CoolBarMenu.window(title="Декларация").click_input()
+    # pw.keyboard.send_keys("{DOWN 2}{ENTER}")
+    expl = pw.Desktop(backend="uia")["Обзор папок"]
+    dlg_expl = expl
+    dlg_expl_save_folder = dlg_expl.window(class_name="SysTreeView32")  #.window(title="Рабочий стол")
+    # dlg_expl_save_folder.double_click_input()
+    dlg_expl_save_folder.window(title="Этот компьютер").window(title_re=".*(C:)").double_click_input()
+    dlg_expl_save_folder.wheel_mouse_input(wheel_dist = -4)
+    dlg_expl_save_folder.window(title=folder_name).click_input()
+    dlg_expl.window(title="ОК").click_input()
+    pw.Desktop(backend="uia")["Декларация 2024"].window(title="ОК").click_input()
+    app.kill()
 
 def collect_info(file: str) -> list:
     data = []
@@ -64,28 +96,6 @@ def collect_info(file: str) -> list:
         print(f"<log> {file} -- 0")
     return data
 
-
-def open_file(file: str) -> None:
-    import pywinauto as pw
-    pw.Application().start(f'explorer.exe "{file}"')
-
-def create_xml(folder_path: str) -> None:
-    import pywinauto as pw
-    app = pw.Application(backend="uia").connect(path="C:\\АО ГНИВЦ\\Декларация 2024\\Decl2024.exe")
-    dlg_spec = app.window(title_re=".* - Декларация 2024$")
-    actionable_dlg = dlg_spec.wait('visible')
-    dlg_spec.CoolBarMenu.window(title="Декларация").click_input()
-    pw.keyboard.send_keys("{DOWN 2}{ENTER}")
-    expl = pw.Desktop(backend="uia")["Обзор папок"]
-    dlg_expl = expl
-    dlg_expl_save_folder = dlg_expl.window(class_name="SysTreeView32").window(title="Рабочий стол")
-    dlg_expl_save_folder.double_click_input()
-    dlg_expl_save_folder.window(title=folder_path).click_input()
-    dlg_expl.window(title="ОК").click_input()
-    pw.Desktop(backend="uia")["Декларация 2024"].window(title="ОК").click_input()
-    app.kill()
-
-
 def find_deduction(path: str) -> bool:
     with open(path) as f:
         f = f.read()
@@ -100,7 +110,6 @@ def find_deduction(path: str) -> bool:
             if ost:
                 return True
         return False
-
 
 def get_info(path: str) -> list:
     with open(path) as f:

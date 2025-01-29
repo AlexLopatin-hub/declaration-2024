@@ -37,10 +37,10 @@ def start_process():
         if ans:
             try:
                 res = main_process.main(folder, enabled.get())
-                if askyesno(title="Готово", message="Результат сохранён на рабочем столе. Открыть в проводнике?"):
+                if askyesno(title="Готово", message=f"Результат сохранён по пути {res}. Открыть в проводнике?"):
                     os.system(f'explorer {res}')
             except FileExistsError:
-                showerror(title="Ошибка", message='Папка "xml" уже существует на рабочем столе, удалите или переместите её перед тем, как начать')
+                showerror(title="Ошибка", message='Не удалось создать папку с названием "xml" в каталоге "C:\\", удалите или переместите её перед тем, как начать')
             except RuntimeError:
                 showerror(title="Ошибка", message="Закройте приложение Декларация 2024 перед тем как запускать программу")
 
