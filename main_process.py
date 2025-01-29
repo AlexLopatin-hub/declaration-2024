@@ -27,8 +27,8 @@ def main(working_folder: str, alternate = 0) -> str:
             pass
 
         # Создаём папку для всех извлечённых xml файлов
-        for i in range(1, 100):
-            xml_folder_name = "xml" + str(i)
+        for i in range(100):
+            xml_folder_name = "xml" + str(i).replace("0", "")
             xml_folder_path = f"C:\\{xml_folder_name}"
             if not os.path.isdir(xml_folder_path):
                 break
