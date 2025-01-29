@@ -72,11 +72,20 @@ def create_xml(folder_name: str) -> None:
     # pw.keyboard.send_keys("{DOWN 2}{ENTER}")
     expl = pw.Desktop(backend="uia")["Обзор папок"]
     dlg_expl = expl
-    dlg_expl_save_folder = dlg_expl.window(class_name="SysTreeView32")  #.window(title="Рабочий стол")
-    # dlg_expl_save_folder.double_click_input()
+    dlg_expl_save_folder = dlg_expl.window(class_name="SysTreeView32")
     dlg_expl_save_folder.window(title="Этот компьютер").window(title_re=".*(C:)").double_click_input()
-    dlg_expl_save_folder.wheel_mouse_input(wheel_dist = -4)
-    dlg_expl_save_folder.window(title=folder_name).click_input()
+
+    dlg_expl_save_folder.wheel_mouse_input(wheel_dist = -3)
+    try:
+        dlg_expl_save_folder.window(title=folder_name).click_input()
+    except pw.findwindows.ElementNotFoundError:
+        dlg_expl_save_folder.wheel_mouse_input(wheel_dist = -3)
+        try:
+            dlg_expl_save_folder.window(title=folder_name).click_input()
+        except pw.findwindows.ElementNotFoundError:
+            dlg_expl_save_folder.wheel_mouse_input(wheel_dist = -3)
+            dlg_expl_save_folder.window(title=folder_name).click_input()
+
     dlg_expl.window(title="ОК").click_input()
     pw.Desktop(backend="uia")["Декларация 2024"].window(title="ОК").click_input()
     app.kill()
