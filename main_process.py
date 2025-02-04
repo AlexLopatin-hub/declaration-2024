@@ -97,6 +97,7 @@ def collect_info(file: str) -> list:
             soup = BeautifulSoup(f, features='xml')
             fio = soup.find("ФИОФЛ")
             fio = list(fio.attrs.values())
+            fio[-1] += ","
             phone = soup.find("НПФЛ3")
             phone = [phone.attrs["Тлф"]]
             data = fio + phone
