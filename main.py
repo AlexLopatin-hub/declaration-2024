@@ -5,6 +5,7 @@ from tkinter import ttk
 from tkinter import filedialog as fd
 from tkinter.messagebox import askyesno, showerror, showinfo
 import tempfile, base64, zlib
+from info_window import *
 
 
 ICON = zlib.decompress(base64.b64decode("eJxjYGAEQgEBBiDJwZDBysAgxsDAoAHEQCEGBQaIOAg4sDIgACMUj4JRMApGwQgF/ykEAFXxQRc="))
@@ -44,21 +45,28 @@ def start_process():
             except RuntimeError:
                 showerror(title="Ошибка", message="Закройте приложение Декларация 2024 перед тем как запускать программу")
 
+def show_info():
+    window = InfoWindow(root, enabled.get())
 
-entry = ttk.Entry(width=45)
-entry.grid(row=0, column=0, columnspan=2)
 
-open_button = ttk.Button(root, text="Открыть папку", command=select_folder)
-open_button.grid(row=0, column=2, padx=(0, 10))
+if __name__=="__main__":
+    entry = ttk.Entry(width=45)
+    entry.grid(row=0, column=0, columnspan=2)
 
-enabled = tk.IntVar()
-alternate_checkbutton = ttk.Checkbutton(text="Обработать только xml", variable=enabled, width=38)
-alternate_checkbutton.grid(row=1, column=0, padx=0)
+    open_button = ttk.Button(root, text="Открыть папку", command=select_folder)
+    open_button.grid(row=0, column=2, padx=(0, 10))
 
-start_button = ttk.Button(root, text="Начать", command=start_process)
-start_button.grid(row=1, column=2, padx=(0, 10))
+    enabled = tk.IntVar()
+    alternate_checkbutton = ttk.Checkbutton(text="Обработать только xml", variable=enabled, width=38)
+    alternate_checkbutton.grid(row=1, column=0, padx=0)
 
-showinfo(title="Информация", message="При стандартном режиме работы требуется указать путь к папке с dc4 файлами. "
-                                     "При работе только с xml требуется указать путь к папке с xml-файлами")
+    start_button = ttk.Button(root, text="Начать", command=start_process)
+    start_button.grid(row=1, column=2, padx=(0, 10))
 
-root.mainloop()
+    info_button = ttk.Button(root, text="Информация", command=show_info)
+    info_button.grid(row=2, column=0, padx=(0, 10))
+
+    # showinfo(title="Информация", message="При стандартном режиме работы требуется указать путь к папке с dc4 файлами. "
+    #                                      "При работе только с xml требуется указать путь к папке с xml-файлами")
+
+    root.mainloop()
