@@ -1,5 +1,6 @@
 import os
 import main_process
+import db
 import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog as fd
@@ -15,10 +16,10 @@ root = tk.Tk()
 root.iconbitmap(default=ICON_PATH)
 root.title('Выберите папку')
 root.resizable(False, False)
-root.geometry("400x100+750+400")
+root.geometry("450x100+750+400")
 
-for c in range(2): root.columnconfigure(index=c, weight=1)
 for r in range(3): root.rowconfigure(index=r, weight=1)
+for c in range(3): root.columnconfigure(index=c, weight=1)
 
 
 def select_folder():
@@ -49,24 +50,44 @@ def show_info():
     window = InfoWindow(root, enabled.get())
 
 
+def list_database():
+    data = db.get_table()
+    wind = tk.Tk()
+    wind.resizable(False, False)
+
+    for r in range(2): root.rowconfigure(index=r, weight=1)
+    for c in range(2): root.columnconfigure(index=c, weight=1)
+
+    listbox = tk.Listbox(wind, width=50, height=10)
+    listbox.grid(row=0, column=0, columnspan=2, pady=10)
+
+    editbtn = ttk.Button(wind, text="Изменить")
+    rmbtn = ttk.Button(wind, text="Удалить")
+    editbtn.grid(row=1, column=0, pady=(0, 10))
+    rmbtn.grid(row=1, column=1, pady=(0, 10))
+
+    for item in data:
+        listbox.insert(tk.END, item)
+
+
 if __name__=="__main__":
-    entry = ttk.Entry(width=45)
-    entry.grid(row=0, column=0, columnspan=2)
+    entry = ttk.Entry(width=55)
+    entry.grid(row=0, column=0, columnspan=2, padx=10)
 
     open_button = ttk.Button(root, text="Открыть папку", command=select_folder)
-    open_button.grid(row=0, column=2, padx=(0, 10))
+    open_button.grid(row=0, column=2, padx=(0, 10), ipadx=10)
 
     enabled = tk.IntVar()
     alternate_checkbutton = ttk.Checkbutton(text="Обработать только xml", variable=enabled, width=38)
-    alternate_checkbutton.grid(row=1, column=0, padx=0)
+    alternate_checkbutton.grid(row=1, column=0, padx=(10, 0))
 
     start_button = ttk.Button(root, text="Начать", command=start_process)
-    start_button.grid(row=1, column=2, padx=(0, 10))
+    start_button.grid(row=1, column=2, padx=(0, 10), ipadx=10)
 
-    info_button = ttk.Button(root, text="Информация", command=show_info)
-    info_button.grid(row=2, column=0, padx=(0, 10))
+    info_button = ttk.Button(root, text="Инструкция", command=show_info)
+    info_button.grid(row=2, column=2, padx=(0, 10), ipadx=10)
 
-    # showinfo(title="Информация", message="При стандартном режиме работы требуется указать путь к папке с dc4 файлами. "
-    #                                      "При работе только с xml требуется указать путь к папке с xml-файлами")
+    list_button = ttk.Button(root, text="База клиентов", command=list_database)
+    list_button.grid(row=2, column=1, padx=(0, 10), ipadx=10)
 
     root.mainloop()

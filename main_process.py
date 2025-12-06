@@ -40,7 +40,7 @@ def main(working_folder: str, alternate = 0) -> str:
 
         # Пробегаемся по xml-файлам, находим нужные и записываем данные клиентов в базу данных
         process_xmls(xml_folder_path)
-        delete_duplicates()
+        # delete_duplicates()
 
         # Возвращаем путь созданной папки
         return xml_folder_path
