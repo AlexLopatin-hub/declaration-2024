@@ -23,7 +23,6 @@ def open_connection() -> sqlite3.Connection:
     """)
     conn.commit()
     curr.close()
-    print("<log> Closed database")
     return conn
 
 

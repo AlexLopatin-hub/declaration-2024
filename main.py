@@ -7,6 +7,7 @@ from tkinter import filedialog as fd
 from tkinter.messagebox import askyesno, showerror, showinfo
 import tempfile, base64, zlib
 from info_window import *
+from db_window import *
 
 
 ICON = zlib.decompress(base64.b64decode("eJxjYGAEQgEBBiDJwZDBysAgxsDAoAHEQCEGBQaIOAg4sDIgACMUj4JRMApGwQgF/ykEAFXxQRc="))
@@ -51,23 +52,7 @@ def show_info():
 
 
 def list_database():
-    data = db.get_table()
-    wind = tk.Tk()
-    wind.resizable(False, False)
-
-    for r in range(2): root.rowconfigure(index=r, weight=1)
-    for c in range(2): root.columnconfigure(index=c, weight=1)
-
-    listbox = tk.Listbox(wind, width=50, height=10)
-    listbox.grid(row=0, column=0, columnspan=2, pady=10)
-
-    editbtn = ttk.Button(wind, text="Изменить")
-    rmbtn = ttk.Button(wind, text="Удалить")
-    editbtn.grid(row=1, column=0, pady=(0, 10))
-    rmbtn.grid(row=1, column=1, pady=(0, 10))
-
-    for item in data:
-        listbox.insert(tk.END, item)
+    window = DBWindow(root)
 
 
 if __name__=="__main__":

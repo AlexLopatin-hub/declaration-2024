@@ -30,3 +30,5 @@ class InfoWindow(tk.Toplevel):
 
         self.focus_set()
         master.wait_window(self)
+
+

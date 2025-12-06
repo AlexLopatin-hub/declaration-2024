@@ -127,8 +127,10 @@ def process_xmls(xml_folder_path):
     curr.close()
     conn.commit()
     conn.close()
+    print("<log> Closed database")
 
 
+# debug feature. not supposed to be in release
 if __name__ == '__main__':
     t1 = time.time()
     main(".", 1)
