@@ -1,23 +1,24 @@
 import tkinter as tk
-from tkinter import ttk
-
-from gevent.testing.travis import command
-
+import sqlite3
+from tkinter import ttk, StringVar
+from tkinter.messagebox import askyesno, showerror
 import db
+from edit_client_window import *
+
 
 class DBWindow(tk.Toplevel):
     def __init__(self, master, **kwargs):
         super().__init__(master)
 
         self.title("База клиентов")
-        self.geometry("420x175+550+300")
+        self.geometry("480x175+550+300")
         self.resizable(False, False)
 
         self.transient(master)
         self.grab_set()
 
         # main content
-        self.listbox = tk.Listbox(self, width=50, height=10, selectmode="single")
+        self.listbox = tk.Listbox(self, width=60, height=10, selectmode="single")
         self.listbox.pack(side="left")
         self.scroll = ttk.Scrollbar(self, command=self.listbox.yview)
         self.scroll.pack(side="left", fill="y")
@@ -25,7 +26,7 @@ class DBWindow(tk.Toplevel):
 
         self.f = ttk.Frame(self)
         self.f.pack(side="left", padx=10)
-        ttk.Button(self.f, text="Изменить", command=self.foo).pack(fill="x")
+        ttk.Button(self.f, text="Изменить", command=self.edit_client).pack(fill="x")
         ttk.Button(self.f, text="Удалить", command=self.delete_client).pack(fill="x")
         ttk.Button(self.f, text="Экспорт", command=self.export_in_txt).pack(fill="x", pady=(70, 0))
 
@@ -37,36 +38,66 @@ class DBWindow(tk.Toplevel):
         master.wait_window(self)
 
 
-    def foo(self):
-        selection = self.listbox.curselection()[0]
-        print(selection)
+    def edit_client(self):
+        try:
+            order_in_list = self.listbox.curselection()[0]
+        except IndexError:
+            showerror(title="Ошибка", message="Не выбран клиент")
+            return
 
-    def edit_client(self, name: str, new_info: list):
+        client_id = self.listbox.get(order_in_list)[0]
+        client_name = StringVar()
+        client_phone = StringVar()
+        client_name.set(self.listbox.get(order_in_list)[1])
+        client_phone.set(self.listbox.get(order_in_list)[2])
+
+        EditClientWindow(self, client_name, client_phone)
+
         conn = db.open_connection()
         curr = conn.cursor()
         curr.execute(f"""
             UPDATE clients
             SET
-                name = {new_info[0]}
-                phone = {new_info[1]}
+                name = "{client_name.get()}",
+                phone = "{client_phone.get()}"
             WHERE
-                name = {name};
+                id = {client_id};
         """)
         curr.close()
+        conn.commit()
         conn.close()
         print("<log> Closed database")
 
+        self.listbox.delete(order_in_list)
+
+        conn = sqlite3.connect("clients.db")
+        curr = conn.cursor()
+        curr.execute(f"SELECT * FROM clients WHERE id = {client_id};")
+        client = curr.fetchall()
+        curr.close()
+        conn.close()
+        if client:
+            self.listbox.insert(order_in_list, client[0])
+
 
     def delete_client(self):
-        order_in_list = self.listbox.curselection()[0]
+        try:
+            order_in_list = self.listbox.curselection()[0]
+        except IndexError:
+            showerror(title="Ошибка", message="Не выбран клиент")
+            return
+        ans = askyesno(title="Вы уверены?", message="Вы уверены, что хотите удалить клиента?")
+        if not ans:
+            return
+
         client_id = self.listbox.get(order_in_list)[0]
         conn = db.open_connection()
         curr = conn.cursor()
         cmnd = f"DELETE FROM clients WHERE id = {client_id}"
         print(f"<log> Executing command: {cmnd}")
         curr.execute(cmnd)
-        conn.commit()
         curr.close()
+        conn.commit()
         conn.close()
         print("<log> Closed database")
         self.listbox.delete(order_in_list)

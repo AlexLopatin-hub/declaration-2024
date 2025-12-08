@@ -44,6 +44,13 @@ def delete_duplicates():
 def get_table():
     conn = sqlite3.connect("clients.db")
     curr = conn.cursor()
+    curr.execute("""
+        CREATE TABLE IF NOT EXISTS clients (
+            id INTEGER PRIMARY KEY,
+            name TEXT NOT NULL,
+            phone TEXT NOT NULL
+        )
+    """)
     curr.execute("SELECT * FROM clients;")
     tables = curr.fetchall()
     curr.close()
