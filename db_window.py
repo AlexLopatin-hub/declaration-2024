@@ -1,7 +1,7 @@
 import tkinter as tk
 import sqlite3
 from tkinter import ttk, StringVar
-from tkinter.messagebox import askyesno, showerror
+from tkinter.messagebox import askyesno, showerror, showinfo
 import db
 from edit_client_window import *
 
@@ -103,7 +103,6 @@ class DBWindow(tk.Toplevel):
         self.listbox.delete(order_in_list)
 
 
-
     def export_in_txt(self):
         conn = db.open_connection()
         curr = conn.cursor()
@@ -115,3 +114,4 @@ class DBWindow(tk.Toplevel):
         with open(f".\\clients.txt", "a") as f:
             for client in data:
                 f.write(" ".join(client[1:]) + "\n")
+        showinfo(message="Результат сохранён в папке с программой.")

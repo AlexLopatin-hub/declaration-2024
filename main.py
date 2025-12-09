@@ -40,8 +40,8 @@ def start_process():
         if ans:
             try:
                 res = main_process.main(folder, enabled.get())
-                if askyesno(title="Готово", message=f"Результат сохранён по пути {res}. Открыть в проводнике?"):
-                    os.system(f'explorer {res}')
+                showinfo(message='Готово. Результат сохранён в clients.db в папке с программой. '
+                                 'Сделать экспорт в текстовый файл можно в окне "База клиентов"')
             except FileExistsError:
                 showerror(title="Ошибка", message='Не удалось создать папку с названием "xml" в каталоге "C:\\", удалите или переместите её перед тем, как начать')
             except RuntimeError:
