@@ -1,6 +1,6 @@
 import tkinter as tk
 import sqlite3
-from tkinter import ttk, StringVar
+from tkinter import ttk, StringVar, filedialog
 from tkinter.messagebox import askyesno, showerror, showinfo
 import db
 from edit_client_window import *
@@ -111,7 +111,15 @@ class DBWindow(tk.Toplevel):
         curr.close()
         conn.close()
         print("<log> Closed database")
-        with open(f".\\clients.txt", "a") as f:
-            for client in data:
-                f.write(" ".join(client[1:]) + "\n")
-        showinfo(message="Результат сохранён в папке с программой.")
+        filepath = filedialog.asksaveasfilename(
+            defaultextension=".txt",
+            filetypes=[("Text files", "*.txt"), ("All files", "*.*")]
+        )
+        if filepath:
+            try:
+                with open(filepath, 'w', encoding='utf-8') as f:
+                    for client in data:
+                        f.write(" ".join(client[1:]) + "\n")
+                    showinfo(message=f"Файл сохранен: {filepath}")
+            except Exception as e:
+                print(f"<log> Ошибка сохранения: {e}")
