@@ -1,20 +1,15 @@
 import os
 import time
 from bs4 import BeautifulSoup
+import db
+from db import add_client_to_db, delete_duplicates
 
 
 def main(working_folder: str, alternate = 0) -> str:
     user = os.getlogin()
 
     if alternate == 1:
-        # if os.path.isdir(working_folder):
-        #     raise FileNotFoundError("Не найдена указанная папка")
-        for root, dirs, files in os.walk(working_folder):
-            for file in files:
-                data = collect_info(os.path.join(root, file))
-                if data:
-                    with open(f"{working_folder}\\result.txt", "a") as f:
-                        f.write(" ".join(data) + "\n")
+        process_xmls(working_folder)
         return working_folder
 
     else:
@@ -34,7 +29,6 @@ def main(working_folder: str, alternate = 0) -> str:
                 break
         else:
             raise FileExistsError
-        # os.mkdir(f"C:\\Users\\{user}\\Desktop\\{xml_folder_name}")
         os.mkdir(xml_folder_path)
 
         # Поочерёдно запускаем каждый dc4 файл и извлекаем оттуда xml
@@ -44,16 +38,11 @@ def main(working_folder: str, alternate = 0) -> str:
                     open_file(os.path.join(root, file))
                     create_xml(xml_folder_name)
 
-        # Пробегаемся по xml-файлам, находим нужные и записываем данные клиентов в текстовый файл
-        for root, dirs, files in os.walk(xml_folder_path):
-            for file in files:
-                data = collect_info(os.path.join(root, file))
-                if data:
-                    with open(f"{xml_folder_path}\\result.txt", "a") as f:
-                        f.write(" ".join(data) + "\n")
+        # Пробегаемся по xml-файлам, находим нужные и записываем данные клиентов в базу данных
+        process_xmls(xml_folder_path)
+        delete_duplicates()
 
         # Возвращаем путь созданной папки
-        # return f"C:\\Users\\{user}\\Desktop\\xml"
         return xml_folder_path
 
 
@@ -68,8 +57,6 @@ def create_xml(folder_name: str) -> None:
     time.sleep(2)
     actionable_dlg = dlg_spec.wait('visible')
     dlg_spec.children()[2].click_input()
-    # dlg_spec.CoolBarMenu.window(title="Декларация").click_input()
-    # pw.keyboard.send_keys("{DOWN 2}{ENTER}")
     expl = pw.Desktop(backend="uia")["Обзор папок"]
     dlg_expl = expl
     dlg_expl_save_folder = dlg_expl.window(class_name="SysTreeView32")
@@ -96,8 +83,7 @@ def collect_info(file: str) -> list:
         with open(file) as f:
             soup = BeautifulSoup(f, features='xml')
             fio = soup.find("ФИОФЛ")
-            fio = list(fio.attrs.values())
-            fio[-1] += ","
+            fio = [" ".join(list(fio.attrs.values()))]
             phone = soup.find("НПФЛ3")
             phone = [phone.attrs["Тлф"]]
             data = fio + phone
@@ -130,9 +116,23 @@ def get_info(path: str) -> list:
         phone = [phone.attrs["Тлф"]]
         return fio + phone
 
+def process_xmls(xml_folder_path):
+    conn = db.open_connection()
+    curr = conn.cursor()
+    for root, dirs, files in os.walk(xml_folder_path):
+        for file in files:
+            data = collect_info(os.path.join(root, file))
+            if data:
+                add_client_to_db(curr, data)
+    curr.close()
+    conn.commit()
+    conn.close()
+    print("<log> Closed database")
 
+
+# debug feature. not supposed to be in release
 if __name__ == '__main__':
     t1 = time.time()
-    main(".")
+    main(".", 1)
     t2 = time.time()
     print(f"time consumed: {t2 - t1}")

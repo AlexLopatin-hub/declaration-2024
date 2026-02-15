@@ -1,10 +1,13 @@
 import os
 import main_process
+import db
 import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog as fd
 from tkinter.messagebox import askyesno, showerror, showinfo
 import tempfile, base64, zlib
+from info_window import *
+from db_window import *
 
 
 ICON = zlib.decompress(base64.b64decode("eJxjYGAEQgEBBiDJwZDBysAgxsDAoAHEQCEGBQaIOAg4sDIgACMUj4JRMApGwQgF/ykEAFXxQRc="))
@@ -14,10 +17,10 @@ root = tk.Tk()
 root.iconbitmap(default=ICON_PATH)
 root.title('Выберите папку')
 root.resizable(False, False)
-root.geometry("400x100+750+400")
+root.geometry("450x100+750+400")
 
-for c in range(2): root.columnconfigure(index=c, weight=1)
 for r in range(3): root.rowconfigure(index=r, weight=1)
+for c in range(3): root.columnconfigure(index=c, weight=1)
 
 
 def select_folder():
@@ -37,28 +40,39 @@ def start_process():
         if ans:
             try:
                 res = main_process.main(folder, enabled.get())
-                if askyesno(title="Готово", message=f"Результат сохранён по пути {res}. Открыть в проводнике?"):
-                    os.system(f'explorer {res}')
+                showinfo(message='Готово. Результат сохранён в clients.db в папке с программой. '
+                                 'Сделать экспорт в текстовый файл можно в окне "База клиентов"')
             except FileExistsError:
                 showerror(title="Ошибка", message='Не удалось создать папку с названием "xml" в каталоге "C:\\", удалите или переместите её перед тем, как начать')
             except RuntimeError:
                 showerror(title="Ошибка", message="Закройте приложение Декларация 2024 перед тем как запускать программу")
 
+def show_info():
+    window = InfoWindow(root, enabled.get())
 
-entry = ttk.Entry(width=45)
-entry.grid(row=0, column=0, columnspan=2)
 
-open_button = ttk.Button(root, text="Открыть папку", command=select_folder)
-open_button.grid(row=0, column=2, padx=(0, 10))
+def list_database():
+    window = DBWindow(root)
 
-enabled = tk.IntVar()
-alternate_checkbutton = ttk.Checkbutton(text="Обработать только xml", variable=enabled, width=38)
-alternate_checkbutton.grid(row=1, column=0, padx=0)
 
-start_button = ttk.Button(root, text="Начать", command=start_process)
-start_button.grid(row=1, column=2, padx=(0, 10))
+if __name__=="__main__":
+    entry = ttk.Entry(width=55)
+    entry.grid(row=0, column=0, columnspan=2, padx=10)
 
-showinfo(title="Информация", message="При стандартном режиме работы требуется указать путь к папке с dc4 файлами. "
-                                     "При работе только с xml требуется указать путь к папке с xml-файлами")
+    open_button = ttk.Button(root, text="Открыть папку", command=select_folder)
+    open_button.grid(row=0, column=2, padx=(0, 10), ipadx=10)
 
-root.mainloop()
+    enabled = tk.IntVar()
+    alternate_checkbutton = ttk.Checkbutton(text="Обработать только xml", variable=enabled, width=38)
+    alternate_checkbutton.grid(row=1, column=0, padx=(10, 0))
+
+    start_button = ttk.Button(root, text="Начать", command=start_process)
+    start_button.grid(row=1, column=2, padx=(0, 10), ipadx=10)
+
+    info_button = ttk.Button(root, text="Инструкция", command=show_info)
+    info_button.grid(row=2, column=2, padx=(0, 10), ipadx=10)
+
+    list_button = ttk.Button(root, text="База клиентов", command=list_database)
+    list_button.grid(row=2, column=1, padx=(0, 10), ipadx=10)
+
+    root.mainloop()
